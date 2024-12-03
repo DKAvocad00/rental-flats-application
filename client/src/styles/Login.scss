@@ -1,14 +1,14 @@
 @import "./variables.scss";
 @import "./breakpoints.scss";
 
-.register {
+.login {
   width: 100vw;
   height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  background: url("../../public/assets/register.jpg") center;
+  background: url("../../public/assets/login.jpg") center;
   background-size: cover;
 
   &_content {
@@ -17,7 +17,7 @@
     gap: 15px;
     width: 40%;
     padding: 40px;
-    background-color:  rgba(0, 0, 0, 0.8);;
+    background-color: rgba(0, 0, 0, 0.8);
     border-radius: 20px;
 
     @include lg {
@@ -43,29 +43,14 @@
         outline: none;
         text-align: center;
         color: white;
-        font-size: 18px;
-        
+        font-size: 16px;
+
         input:not(:placeholder-shown):focus {
           background: transparent; /* or background: none; */
         }
 
         &::placeholder {
           color: white;
-        }
-      }
-
-      label {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        gap: 9px;
-        cursor: pointer;
-        color: white;
-        font-size: 16px;
-
-        img {
-          width: 25px;
         }
       }
 
@@ -81,6 +66,13 @@
       }
     }
 
+    &_google {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
     a {
       text-decoration: none;
       color: white;
@@ -91,6 +83,12 @@
       &:hover {
         text-decoration: underline;
       }
+    }
+
+    p {
+      color: white;
+      font-size: 13px;
+      text-align: center;
     }
   }
 }
