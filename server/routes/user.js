@@ -12,7 +12,9 @@ router.get("/:userId/trips", async (req, res) => {
     res.status(202).json(trips);
   } catch (err) {
     console.log(err);
-    res.status(404).json({ message: "Trips not found", error: err.message });
+    res
+      .status(404)
+      .json({ message: "Can not find trips!", error: err.message });
   }
 });
 

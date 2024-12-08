@@ -114,16 +114,12 @@ const CreateListing = () => {
       listingForm.append("bedroomCount", bedroomCount);
       listingForm.append("bedCount", bedCount);
       listingForm.append("bathroomCount", bathroomCount);
+      listingForm.append("amenities", amenities);
       listingForm.append("title", formDescription.title);
       listingForm.append("description", formDescription.description);
       listingForm.append("highlight", formDescription.highlight);
       listingForm.append("highlightDesc", formDescription.highlightDesc);
       listingForm.append("price", formDescription.price);
-
-      /* Append each selected amenities to the FormData object */
-      amenities.forEach((amenity) => {
-        listingForm.append("amenities", amenity);
-      });
 
       /* Append each selected photos to the FormData object */
       photos.forEach((photo) => {
