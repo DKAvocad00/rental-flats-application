@@ -65,7 +65,7 @@ export const Navbar = () => {
           <div className="navbar_right_accountmenu">
             <Link to={`/${user._id}/trips`}>Trip List</Link>
             <Link to={`/${user._id}/wishList`}>Wish List</Link>
-            <Link to="">Property List</Link>
+            <Link to={`/${user._id}/properties`}>Property List</Link>
             <Link to="">Reservation List</Link>
             <Link to="">Become A Host</Link>
             <Link
