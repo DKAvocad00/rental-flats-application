@@ -6,7 +6,7 @@ import ListingCard from "../components/ListingCard";
 import { useParams } from "react-router-dom";
 import { setListings } from "../redux/state";
 import Loader from "../components/Loader";
-
+import Footer from "../components/Footer";
 const SearchPage = () => {
   const [loading, setLoading] = useState(true);
   const { search } = useParams();
@@ -68,6 +68,7 @@ const SearchPage = () => {
           )
         )}
       </div>
+      <Footer />
     </>
   );
 };
