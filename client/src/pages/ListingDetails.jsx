@@ -9,6 +9,7 @@ import { DateRange } from "react-date-range";
 import Loader from "../components/Loader";
 import { useSelector } from "react-redux";
 import Navbar from "../components/Navbar";
+
 const ListingDetails = () => {
   const [loading, setLoading] = useState(true);
 
@@ -67,8 +68,8 @@ const ListingDetails = () => {
         customerId,
         listingId,
         hostId: listing.creator._id,
-        startDate: dateRange[0].startDate.toDateString(),
-        endDate: dateRange[0].endDate.toDateString(),
+        startDate: dateRange[0].startDate.toLocaleDateString(),
+        endDate: dateRange[0].endDate.toLocaleDateString(),
         totalPrice: listing.price * dayCount,
       };
 
@@ -172,8 +173,8 @@ const ListingDetails = () => {
               )}
 
               <h2>Total price: ${listing.price * dayCount}</h2>
-              <p>Start Date: {dateRange[0].startDate.toDateString()}</p>
-              <p>End Date: {dateRange[0].endDate.toDateString()}</p>
+              <p>Start Date: {dateRange[0].startDate.toLocaleDateString()}</p>
+              <p>End Date: {dateRange[0].endDate.toLocaleDateString()}</p>
 
               <button className="button" type="submit" onClick={handleSubmit}>
                 BOOKING
