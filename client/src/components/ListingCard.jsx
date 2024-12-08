@@ -1,9 +1,11 @@
 import "../styles/ListingCard.scss";
 import { ArrowForwardIos, ArrowBackIosNew } from "@mui/icons-material";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
 
 const ListingCard = ({
-  _listingId,
+  listingId,
   creator,
   listingPhotoPaths,
   city,
@@ -15,6 +17,7 @@ const ListingCard = ({
 }) => {
   /*Slider for images*/
   const [currentIndex, setCurrentIndex] = useState(0);
+
   const goToPrevSlide = () => {
     setCurrentIndex(
       (prevIndex) =>
@@ -26,8 +29,16 @@ const ListingCard = ({
     setCurrentIndex((prevIndex) => (prevIndex + 1) % listingPhotoPaths.length);
   };
 
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
   return (
-    <div className="listing-card">
+    <div
+      className="listing-card"
+      onClick={() => {
+        navigate(`/properties/${listingId}`);
+      }}
+    >
       <div className="slider-container">
         <div
           className="slider"
@@ -36,24 +47,26 @@ const ListingCard = ({
           {listingPhotoPaths?.map((photo, index) => (
             <div className="slide" key={index}>
               <img
-                src={`http://localhost:3001/${photo.replace("public", "")}`}
+                src={`http://localhost:3001/${photo?.replace("public", "")}`}
                 alt={`photo ${index + 1}`}
               />
               <div
                 className="prev-button"
                 onClick={(e) => {
+                  e.stopPropagation();
                   goToPrevSlide(e);
                 }}
               >
-                <ArrowBackIosNew style={{ fontSize: "15px" }} />
+                <ArrowBackIosNew sx={{ fontSize: "15px" }} />
               </div>
               <div
                 className="next-button"
                 onClick={(e) => {
+                  e.stopPropagation();
                   goToNextSlide(e);
                 }}
               >
-                <ArrowForwardIos style={{ fontSize: "15px" }} />
+                <ArrowForwardIos sx={{ fontSize: "15px" }} />
               </div>
             </div>
           ))}
