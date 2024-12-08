@@ -9,6 +9,7 @@ import TripList from "./pages/TripList";
 import WishList from "./pages/WishList";
 import PropertyList from "./pages/PropertyList";
 import ReservationList from "./pages/ReservationList";
+import CategoryPage from "./pages/CategoryPage";
 function App() {
   return (
     <div>
@@ -19,6 +20,10 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/create-listing" element={<CreateListing />} />
           <Route path="/properties/:listingId" element={<ListingDetails />} />
+          <Route
+            path="/properties/category/:category"
+            element={<CategoryPage />}
+          />
           <Route path="/:userId/trips" element={<TripList />} />
           <Route path="/:userId/wishList" element={<WishList />} />
           <Route path="/:userId/properties" element={<PropertyList />} />
