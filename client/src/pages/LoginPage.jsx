@@ -22,14 +22,13 @@ const LoginPage = () => {
         body: JSON.stringify({ email, password }),
       });
 
-      /*Get data after fetching */
-      const loggedIn = await response.json();
+      const data = await response.json();
 
-      if (loggedIn) {
+      if (response.ok) {
         dispatch(
           setLogin({
-            user: loggedIn.user,
-            token: loggedIn.token,
+            user: data.user,
+            token: data.token,
           })
         );
 
