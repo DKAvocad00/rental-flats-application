@@ -115,12 +115,16 @@ const CreateListing = () => {
       listingForm.append("bedroomCount", bedroomCount);
       listingForm.append("bedCount", bedCount);
       listingForm.append("bathroomCount", bathroomCount);
-      listingForm.append("amenities", amenities);
       listingForm.append("title", formDescription.title);
       listingForm.append("description", formDescription.description);
       listingForm.append("highlight", formDescription.highlight);
       listingForm.append("highlightDesc", formDescription.highlightDesc);
       listingForm.append("price", formDescription.price);
+
+      /* Append each selected amenities to the FormData object */
+      amenities.forEach((amenity) => {
+        listingForm.append("amenities", amenity);
+      });
 
       /* Append each selected photos to the FormData object */
       photos.forEach((photo) => {
@@ -389,7 +393,7 @@ const CreateListing = () => {
                     {...provided.droppableProps}
                     ref={provided.innerRef}
                   >
-                    {photos.length < 1 && (
+                    {photos.length < 1 ? (
                       <>
                         <input
                           id="image"
@@ -406,39 +410,35 @@ const CreateListing = () => {
                           <p>Upload from your device</p>
                         </label>
                       </>
-                    )}
-
-                    {photos.length >= 1 && (
+                    ) : (
                       <>
-                        {photos.map((photo, index) => {
-                          return (
-                            <Draggable
-                              key={index}
-                              draggableId={index.toString()}
-                              index={index}
-                            >
-                              {(provided) => (
-                                <div
-                                  className="photo"
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
+                        {photos.map((photo, index) => (
+                          <Draggable
+                            key={index}
+                            draggableId={index.toString()}
+                            index={index}
+                          >
+                            {(provided) => (
+                              <div
+                                className="photo"
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                              >
+                                <img
+                                  src={URL.createObjectURL(photo)}
+                                  alt="place"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemovePhoto(index)}
                                 >
-                                  <img
-                                    src={URL.createObjectURL(photo)}
-                                    alt="place"
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRemovePhoto(index)}
-                                  >
-                                    <BiTrash />
-                                  </button>
-                                </div>
-                              )}
-                            </Draggable>
-                          );
-                        })}
+                                  <BiTrash />
+                                </button>
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
                         <input
                           id="image"
                           type="file"
@@ -455,6 +455,7 @@ const CreateListing = () => {
                         </label>
                       </>
                     )}
+                    {provided.placeholder}
                   </div>
                 )}
               </Droppable>
