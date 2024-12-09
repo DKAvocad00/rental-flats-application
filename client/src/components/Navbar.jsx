@@ -81,7 +81,7 @@ export const Navbar = () => {
             <Link to={`/${user._id}/reservations`}>Reservation List</Link>
             <Link to="/create-listing">Become A Host</Link>
             <Link
-              to=""
+              to="/"
               onClick={() => {
                 dispatch(setLogout());
               }}
