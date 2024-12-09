@@ -16,7 +16,10 @@ router.post("/create", async (req, res) => {
       totalPrice,
     });
     await newBooking.save();
-    res.status(200).json(newBooking);
+    res.status(200).json({
+      message: "Booking is created successfully",
+      booking: newBooking,
+    });
   } catch (err) {
     console.log(err);
     res

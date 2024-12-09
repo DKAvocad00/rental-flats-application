@@ -50,7 +50,7 @@ router.post("/create", upload.array("listingPhotos"), async (req, res) => {
     const listingPhotos = req.files;
 
     if (!listingPhotos) {
-      return res.status(400).send("No file uploaded.");
+      return res.status(400).json({ message: "No file uploaded." });
     }
 
     const listingPhotoPaths = listingPhotos.map((file) => file.path);
@@ -92,7 +92,10 @@ router.post("/create", upload.array("listingPhotos"), async (req, res) => {
     savedListing.listingPhotoPaths = updatedPhotoPaths;
     await savedListing.save();
 
-    res.status(200).json(newListing);
+    res.status(200).json({
+      message: "Listing is created successfully",
+      listing: savedListing,
+    });
   } catch (err) {
     res
       .status(409)

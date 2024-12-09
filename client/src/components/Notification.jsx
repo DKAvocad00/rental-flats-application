@@ -13,13 +13,11 @@ const Notification = () => {
     let hideTimer;
 
     if (notification.isVisible) {
-      // Устанавливаем состояние видимости для добавления класса 'show'
       setVisible(true);
 
-      // Таймер для скрытия уведомления после заданной продолжительности
       hideTimer = setTimeout(() => {
-        setVisible(false); // Добавляет класс 'hide'
-      }, notification.duration || 3000);
+        setVisible(false);
+      }, notification.duration || 1500);
     }
 
     return () => {
@@ -28,7 +26,6 @@ const Notification = () => {
     };
   }, [notification]);
 
-  // После завершения анимации скрытия, диспатчим действие hideNotification
   const handleTransitionEnd = () => {
     if (!visible && notification.isVisible) {
       dispatch(hideNotification());

@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Register.scss";
+import { showNotification } from "../redux/state";
+import { useDispatch } from "react-redux";
 
 const RegisterPage = () => {
+  const dispatch = useDispatch();
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -46,11 +50,32 @@ const RegisterPage = () => {
         method: "POST",
         body: register_form,
       });
+      const data = await response.json();
 
       if (response.ok) {
+        dispatch(
+          showNotification({
+            message: "Registered successfully!",
+            type: "success",
+          })
+        );
         navigate("/login");
+      } else {
+        // Handle server errors
+        dispatch(
+          showNotification({
+            message: data.error || "Login failed. Please try again.",
+            type: "error",
+          })
+        );
       }
     } catch (err) {
+      dispatch(
+        showNotification({
+          message: err.message || "An error occurred. Please try again.",
+          type: "error",
+        })
+      );
       console.log("Register failed", err.message);
     }
   };
@@ -109,7 +134,6 @@ const RegisterPage = () => {
             accept="image/*"
             style={{ display: "none" }}
             onChange={handleChange}
-            required
           />
           <label htmlFor="image">
             <img src="/assets/addImage.png" alt="lets see your buity" />

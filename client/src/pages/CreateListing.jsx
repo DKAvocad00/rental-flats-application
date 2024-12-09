@@ -8,11 +8,13 @@ import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import { IoIosImages } from "react-icons/io";
 import { useState } from "react";
 import { BiTrash } from "react-icons/bi";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
+import { showNotification } from "../redux/state";
 
 const CreateListing = () => {
+  const dispatch = useDispatch();
   const [category, setCategory] = useState("");
   const [type, setType] = useState("");
 
@@ -137,10 +139,31 @@ const CreateListing = () => {
         body: listingForm,
       });
 
+      const data = await response.json();
+
       if (response.ok) {
+        dispatch(
+          showNotification({
+            message: data.message,
+            type: "success",
+          })
+        );
         navigate("/");
+      } else {
+        dispatch(
+          showNotification({
+            message: data.error,
+            type: "error",
+          })
+        );
       }
     } catch (err) {
+      dispatch(
+        showNotification({
+          message: err.message || "An error occurred. Please try again.",
+          type: "error",
+        })
+      );
       console.log("Publish Listing failed", err.message);
     }
   };

@@ -8,6 +8,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { setWishList } from "../redux/state";
+import { showNotification } from "../redux/state";
 
 const ListingCard = ({
   listingId,
@@ -59,7 +60,22 @@ const ListingCard = ({
         }
       );
       const data = await response.json();
-      dispatch(setWishList(data.wishList));
+      if (response.ok) {
+        dispatch(setWishList(data.wishList));
+        dispatch(
+          showNotification({
+            message: data.message,
+            type: "info",
+          })
+        );
+      } else {
+        dispatch(
+          showNotification({
+            message: data.error || "Failed patching wish list",
+            type: "error",
+          })
+        );
+      }
     } else {
       return;
     }

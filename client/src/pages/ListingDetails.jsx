@@ -14,6 +14,7 @@ import { setWishList } from "../redux/state";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Favorite } from "@mui/icons-material";
+import { showNotification } from "../redux/state";
 
 const ListingDetails = () => {
   const [loading, setLoading] = useState(true);
@@ -121,10 +122,31 @@ const ListingDetails = () => {
         body: JSON.stringify(bookingForm),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
+        dispatch(
+          showNotification({
+            message: data.message,
+            type: "info",
+          })
+        );
         navigate(`/${customerId}/trips`);
+      } else {
+        dispatch(
+          showNotification({
+            message: data.error || "An error occurred. Please try again.",
+            type: "error",
+          })
+        );
       }
     } catch (err) {
+      dispatch(
+        showNotification({
+          message: err.message || "An error occurred. Please try again.",
+          type: "error",
+        })
+      );
       console.log("Submit Booking Failed.", err.message);
     }
   };
@@ -156,7 +178,22 @@ const ListingDetails = () => {
         }
       );
       const data = await response.json();
-      dispatch(setWishList(data.wishList));
+      if (response.ok) {
+        dispatch(setWishList(data.wishList));
+        dispatch(
+          showNotification({
+            message: data.message,
+            type: "info",
+          })
+        );
+      } else {
+        dispatch(
+          showNotification({
+            message: data.error || "Failed patching wish list",
+            type: "error",
+          })
+        );
+      }
     } else {
       return;
     }

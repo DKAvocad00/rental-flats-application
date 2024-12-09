@@ -41,7 +41,7 @@ router.post("/register", upload.single("profileImage"), async (req, res) => {
     /*The uploaded file is available as req.file */
     const profileImage = req.file;
     if (!profileImage) {
-      return res.status(400).send("No file uploaded");
+      return res.status(400).json({ message: "No file uploaded" });
     }
 
     /*Hass the passords*/
@@ -72,7 +72,7 @@ router.post("/register", upload.single("profileImage"), async (req, res) => {
 
     res
       .status(200)
-      .json({ message: "User registered successfully!", user: newUser });
+      .json({ message: "User registered successfully!", user: savedUser });
   } catch (err) {
     console.log(err);
     res
