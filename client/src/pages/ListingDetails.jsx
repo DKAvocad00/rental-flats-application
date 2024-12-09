@@ -95,6 +95,7 @@ const ListingDetails = () => {
 
   /* SUBMIT BOOKING */
   const customerId = useSelector((state) => state?.user?._id);
+  const user = useSelector((state) => state?.user);
 
   const navigate = useNavigate();
 
@@ -122,6 +123,14 @@ const ListingDetails = () => {
       }
     } catch (err) {
       console.log("Submit Booking Failed.", err.message);
+    }
+  };
+
+  const handleBookingClick = () => {
+    if (!user) {
+      navigate("/login");
+    } else {
+      handleSubmit();
     }
   };
 
@@ -217,7 +226,11 @@ const ListingDetails = () => {
               <p>Start Date: {dateRange[0].startDate.toLocaleDateString()}</p>
               <p>End Date: {dateRange[0].endDate.toLocaleDateString()}</p>
 
-              <button className="button" type="submit" onClick={handleSubmit}>
+              <button
+                className="button"
+                type="button"
+                onClick={handleBookingClick}
+              >
                 BOOKING
               </button>
             </div>
