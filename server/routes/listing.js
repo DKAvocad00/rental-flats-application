@@ -3,14 +3,20 @@ const multer = require("multer");
 
 const Listing = require("../models/Listing");
 const User = require("../models/User");
+const path = require("path");
+const fs = require("fs");
 
 /* Configuration Multer for File Upload */
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "public/uploads/"); // Store uploaded files in the 'uploads' folder
+    const tempDir = "public/uploads/temp";
+    fs.mkdirSync(tempDir, { recursive: true });
+    cb(null, tempDir);
   },
   filename: function (req, file, cb) {
-    cb(null, file.originalname); // Use the original file name
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname);
+    cb(null, file.fieldname + "-" + uniqueSuffix + ext);
   },
 });
 
@@ -71,7 +77,20 @@ router.post("/create", upload.array("listingPhotos"), async (req, res) => {
       price,
     });
 
-    await newListing.save();
+    const savedListing = await newListing.save();
+
+    const listingDir = `public/uploads/listings/${savedListing._id}`;
+    fs.mkdirSync(listingDir, { recursive: true });
+
+    const updatedPhotoPaths = listingPhotos.map((file) => {
+      const oldPath = file.path;
+      const newPath = path.join(listingDir, file.filename);
+      fs.renameSync(oldPath, newPath);
+      return newPath;
+    });
+
+    savedListing.listingPhotoPaths = updatedPhotoPaths;
+    await savedListing.save();
 
     res.status(200).json(newListing);
   } catch (err) {

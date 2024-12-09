@@ -2,16 +2,22 @@ const router = require("express").Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 
 const User = require("../models/User");
 
 /* Configuration Multer for file upload */
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "public/uploads/"); //Storage uploaded files in the uploads folder
+    const tempDir = "public/uploads/temp";
+    fs.mkdirSync(tempDir, { recursive: true });
+    cb(null, tempDir);
   },
   filename: function (req, file, cb) {
-    cb(null, file.originalname); //Use the original file name
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname);
+    cb(null, file.fieldname + "-" + uniqueSuffix + ext);
   },
 });
 
@@ -23,20 +29,19 @@ router.post("/register", upload.single("profileImage"), async (req, res) => {
     /* Take all inforamtion from the form */
     const { firstName, lastName, email, password } = req.body;
 
-    /*The uploaded file is available as req.file */
-    const profileImage = req.file;
-
-    if (!profileImage) {
-      return res.status(400).send("No file uploaded");
-    }
-
-    /* path to the uploaded profile photo */
-    const profileImagePath = profileImage.path;
-
     /* Check if user exists */
     const existingUser = await User.findOne({ email });
     if (existingUser) {
+      if (req.file) {
+        fs.unlinkSync(req.file.path);
+      }
       return res.status(409).json({ message: "User already exists!" });
+    }
+
+    /*The uploaded file is available as req.file */
+    const profileImage = req.file;
+    if (!profileImage) {
+      return res.status(400).send("No file uploaded");
     }
 
     /*Hass the passords*/
@@ -49,13 +54,22 @@ router.post("/register", upload.single("profileImage"), async (req, res) => {
       lastName,
       email,
       password: hashedPassword,
-      profileImagePath,
+      profileImagePath: profileImage.filename,
     });
 
     /* Save the new User */
-    await newUser.save();
+    const savedUser = await newUser.save();
 
-    /* Send a successful message*/
+    const userDir = `public/uploads/users/${savedUser._id}`;
+    fs.mkdirSync(userDir, { recursive: true });
+
+    const oldPath = profileImage.path;
+    const newPath = path.join(userDir, profileImage.filename);
+    fs.renameSync(oldPath, newPath);
+
+    savedUser.profileImagePath = newPath;
+    await savedUser.save();
+
     res
       .status(200)
       .json({ message: "User registered successfully!", user: newUser });
