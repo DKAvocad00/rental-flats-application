@@ -1,6 +1,13 @@
 @import "./variables.scss";
 @import "./breakpoints.scss";
 
+.rdrDayDisabled, .rdr-DisabledDay {
+  background-color: #e0e0e0 !important;
+  color: #a0a0a0 !important;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
 .listing-details {
   padding: 40px 130px 120px;
 

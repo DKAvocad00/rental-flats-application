@@ -25,4 +25,17 @@ router.post("/create", async (req, res) => {
   }
 });
 
+/*GET BOOKINGS BY LISTING ID */
+router.get("/:listingId/bookings", async (req, res) => {
+  try {
+    const { listingId } = req.params;
+    const bookings = await Booking.find({ listingId });
+    res.status(200).json(bookings);
+  } catch (err) {
+    res
+      .status(404)
+      .json({ message: "Fail to fetch bookings", error: err.message });
+  }
+});
+
 module.exports = router;

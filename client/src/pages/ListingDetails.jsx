@@ -6,6 +6,7 @@ import { facilities } from "../data";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 import { DateRange } from "react-date-range";
+import { eachDayOfInterval, addDays, parse } from "date-fns";
 import Loader from "../components/Loader";
 import { useSelector } from "react-redux";
 import Navbar from "../components/Navbar";
@@ -16,6 +17,8 @@ const ListingDetails = () => {
 
   const { listingId } = useParams();
   const [listing, setListing] = useState(null);
+
+  const [bookedRanges, setBookedRanges] = useState([]);
 
   const getListingDetails = async () => {
     try {
@@ -34,11 +37,43 @@ const ListingDetails = () => {
     }
   };
 
+  const getBookedDates = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:3001/bookings/${listingId}/bookings`,
+        {
+          method: "GET",
+        }
+      );
+
+      const bookings = await response.json();
+
+      // Function to parse 'dd.MM.yyyy' to Date object using date-fns
+      const parseDate = (dateStr) => parse(dateStr, "dd.MM.yyyy", new Date());
+
+      // Process bookings into an array of Date objects
+      const disabledDatesArray = [];
+      bookings.forEach((booking) => {
+        const start = parseDate(booking.startDate);
+        const end = parseDate(booking.endDate);
+        let currentDate = new Date(start);
+
+        while (currentDate <= end) {
+          disabledDatesArray.push(new Date(currentDate));
+          currentDate = addDays(currentDate, 1);
+        }
+      });
+
+      setBookedRanges(disabledDatesArray);
+    } catch (err) {
+      console.log("Fetch Booked Dates Failed", err.message);
+    }
+  };
+
   useEffect(() => {
     getListingDetails();
-  }, []);
-
-  console.log(listing);
+    getBookedDates();
+  }, [listingId]);
 
   /* BOOKING CALENDAR */
   const [dateRange, setDateRange] = useState([
@@ -162,7 +197,12 @@ const ListingDetails = () => {
           <div>
             <h2>How long do you want to stay?</h2>
             <div className="date-range-calendar">
-              <DateRange ranges={dateRange} onChange={handleSelect} />
+              <DateRange
+                ranges={dateRange}
+                onChange={handleSelect}
+                disabledDates={bookedRanges}
+                minDate={new Date()}
+              />
               {dayCount > 1 ? (
                 <h2>
                   ${listing.price} x {dayCount} nights
