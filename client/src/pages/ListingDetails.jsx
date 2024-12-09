@@ -8,9 +8,12 @@ import "react-date-range/dist/theme/default.css";
 import { DateRange } from "react-date-range";
 import { eachDayOfInterval, addDays, parse } from "date-fns";
 import Loader from "../components/Loader";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { setWishList } from "../redux/state";
+
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { Favorite } from "@mui/icons-material";
 
 const ListingDetails = () => {
   const [loading, setLoading] = useState(true);
@@ -134,6 +137,31 @@ const ListingDetails = () => {
     }
   };
 
+  /* ADD TO WISHLIST */
+  const wishList = user?.wishList || [];
+
+  const isLiked = wishList?.find((item) => item?._id === listingId);
+
+  const dispatch = useDispatch();
+
+  const patchWishList = async () => {
+    if (user?._id !== listing.creator._id) {
+      const response = await fetch(
+        `http://localhost:3001/users/${user?._id}/${listingId}`,
+        {
+          method: "PATCH",
+          header: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const data = await response.json();
+      dispatch(setWishList(data.wishList));
+    } else {
+      return;
+    }
+  };
+
   return loading ? (
     <Loader />
   ) : (
@@ -142,7 +170,20 @@ const ListingDetails = () => {
       <div className="listing-details">
         <div className="title">
           <h1>{listing.title}</h1>
-          <div></div>
+          <div
+            className="save"
+            onClick={(e) => {
+              e.stopPropagation();
+              patchWishList();
+            }}
+            disabled={!user}
+          >
+            {isLiked ? (
+              <Favorite sx={{ color: "red" }} />
+            ) : (
+              <Favorite sx={{ color: "white" }} />
+            )}
+          </div>
         </div>
 
         <div className="photos">

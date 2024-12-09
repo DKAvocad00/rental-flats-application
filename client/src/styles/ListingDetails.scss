@@ -45,11 +45,39 @@
       align-items: center;
       gap: 10px;
       cursor: pointer;
+      padding: 10px 20px;
+      background-color: #ff5a5f;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      transition: background-color 0.3s ease, transform 0.2s ease;
 
-      p {
-        font-size: 20px;
-        font-weight: 700;
-        margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &:hover {
+        background-color: #e14e4e;
+        transform: scale(1.05);
+      }
+
+      &:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+      }
+
+      &.liked {
+        background-color: #ff8080;
+      }
+
+      span {
+        margin-left: 8px;
+      }
+
+      .MuiSvgIcon-root {
+        font-size: 24px;
       }
     }
   }
