@@ -1,0 +1,53 @@
+@import "./variables.scss";
+@import "./breakpoints.scss";
+
+.notification {
+  position: fixed;
+  top: -100px; /* Начальное скрытое положение выше экрана */
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 16px 24px;
+  border-radius: 10px; /* Совместимо с остальными элементами */
+  color: white;
+  z-index: 1000;
+  opacity: 0;
+  transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
+  min-width: 300px;
+  max-width: 90%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  
+  @include sm {
+    min-width: 200px;
+    padding: 12px 18px;
+  }
+
+  /* Состояние для отображения уведомления */
+  &.show {
+    transform: translate(-50%, 120px); /* Сместить вниз для показа */
+    opacity: 1;
+  }
+
+  /* Состояние для скрытия уведомления */
+  &.hide {
+    transform: translate(-50%, -100px); /* Сместить вверх для скрытия */
+    opacity: 0;
+  }
+
+  &.success {
+    background-color: $green; /* Используем переменные для согласованности */
+  }
+
+  &.error {
+    background-color: $pinkred; /* Другой цвет для ошибок */
+  }
+
+  /* Дополнительные типы уведомлений можно добавить здесь */
+  &.info {
+    background-color: #2196F3; /* Пример цвета для информационных уведомлений */
+  }
+
+  &.warning {
+    background-color: #ff9800; /* Пример цвета для предупреждений */
+  }
+}

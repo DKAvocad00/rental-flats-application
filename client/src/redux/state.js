@@ -3,6 +3,11 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   user: null,
   token: null,
+  notification: {
+    message: "",
+    type: "", // 'success' or 'error'
+    isVisible: false,
+  },
 };
 
 export const userSlice = createSlice({
@@ -32,6 +37,16 @@ export const userSlice = createSlice({
     setReservationList: (state, action) => {
       state.user.reservationList = action.payload;
     },
+    showNotification: (state, action) => {
+      state.notification = {
+        message: action.payload.message,
+        type: action.payload.type,
+        isVisible: true,
+      };
+    },
+    hideNotification: (state) => {
+      state.notification.isVisible = false;
+    },
   },
 });
 
@@ -43,5 +58,7 @@ export const {
   setWishList,
   setPropertyList,
   setReservationList,
+  showNotification,
+  hideNotification,
 } = userSlice.actions;
 export default userSlice.reducer;

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "../styles/Login.scss";
-import { setLogin } from "../redux/state";
+import { setLogin, showNotification } from "../redux/state";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
@@ -10,6 +10,7 @@ const LoginPage = () => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -32,12 +33,34 @@ const LoginPage = () => {
           })
         );
 
+        dispatch(
+          showNotification({
+            message: "Logged in successfully!",
+            type: "success",
+          })
+        );
+
         navigate("/");
+      } else {
+        // Handle server errors
+        dispatch(
+          showNotification({
+            message: data.message || "Login failed. Please try again.",
+            type: "error",
+          })
+        );
       }
     } catch (err) {
+      dispatch(
+        showNotification({
+          message: "An error occurred. Please try again.",
+          type: "error",
+        })
+      );
       console.log("Login failed", err.message);
     }
   };
+
   return (
     <div className="login">
       <div className="login_content">
@@ -58,7 +81,7 @@ const LoginPage = () => {
           />
           <button type="submit">LOG IN</button>
         </form>
-        <a href="/register">Dont have an account? Sign in Here</a>
+        <a href="/register">Don't have an account? Sign up here.</a>
       </div>
     </div>
   );
