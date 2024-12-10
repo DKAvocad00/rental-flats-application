@@ -39,11 +39,49 @@ const UserSchema = new mongoose.Schema(
       type: Array,
       default: [],
     },
+    lastViewedListings: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Listing",
+      },
+    ],
+    preferredCategories: [
+      {
+        type: String,
+      },
+    ],
+    preferredLocations: [
+      {
+        city: String,
+        province: String,
+        country: String,
+      },
+    ],
+    pricePreferences: {
+      min: { type: Number, default: 0 },
+      max: { type: Number, default: 1000000 },
+    },
+    viewHistory: [
+      {
+        listing: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Listing",
+        },
+        viewedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
     role: {
       type: String,
-      enum: ["host", "guest"],
+      enum: ["host", "guest", "admin"],
       default: "guest",
       required: true,
+    },
+    isBlocked: {
+      type: Boolean,
+      default: false,
     },
   },
   {

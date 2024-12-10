@@ -116,6 +116,10 @@ router.post("/login", async (req, res) => {
     );
     delete user.password;
 
+    if (user.isBlocked) {
+      return res.status(403).json({ message: "User is blocked." });
+    }
+
     res.status(200).json({
       message: "Login successful!",
       token: token,

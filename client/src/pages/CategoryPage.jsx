@@ -7,12 +7,43 @@ import { useSelector, useDispatch } from "react-redux";
 import { setListings } from "../redux/state";
 import ListingCard from "../components/ListingCard";
 import Footer from "../components/Footer";
+
 const CategoryPage = () => {
   const [loading, setLoading] = useState(true);
   const { category } = useParams();
   const dispatch = useDispatch();
-
+  const token = useSelector((state) => state.token);
+  const user = useSelector((state) => state.user);
   const listings = useSelector((state) => state.listings);
+
+  const getRecommendedListings = async () => {
+    try {
+      if (!user || user.role === "host") {
+        return getFeedListings();
+      }
+
+      const response = await fetch(
+        `http://localhost:3001/properties/recommended/${user._id}?category=${category}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            token: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to fetch recommendations");
+      }
+      dispatch(setListings({ listings: data.listings }));
+      setLoading(false);
+    } catch (err) {
+      console.log("Fetching recommended listings failed", err.message);
+      getFeedListings();
+    }
+  };
 
   const getFeedListings = async () => {
     try {
@@ -31,8 +62,8 @@ const CategoryPage = () => {
   };
 
   useEffect(() => {
-    getFeedListings();
-  }, [category]);
+    getRecommendedListings();
+  }, [category, user]);
 
   return loading ? (
     <Loader />
@@ -55,6 +86,7 @@ const CategoryPage = () => {
             booking = false,
           }) => (
             <ListingCard
+              key={_id}
               listingId={_id}
               creator={creator}
               listingPhotoPaths={listingPhotoPaths}

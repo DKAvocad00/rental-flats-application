@@ -13,6 +13,7 @@ import CategoryPage from "./pages/CategoryPage";
 import SearchPage from "./pages/SearchPage";
 import Notification from "./components/Notification";
 import { useSelector } from "react-redux";
+import AdminDashboard from "./pages/AdminDashboard";
 
 function App() {
   const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -84,6 +85,15 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["host"]}>
                 <ReservationList />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminDashboard />
               </ProtectedRoute>
             }
           />

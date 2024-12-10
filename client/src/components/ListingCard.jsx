@@ -7,7 +7,7 @@ import {
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { setWishList } from "../redux/state";
+import { setWishList, updateUserPreferences } from "../redux/state";
 import { showNotification } from "../redux/state";
 
 const ListingCard = ({
@@ -28,69 +28,117 @@ const ListingCard = ({
   totalPrice,
   booking,
 }) => {
-  /* SLIDER FOR IMAGES */
   const [currentIndex, setCurrentIndex] = useState(0);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.user);
+  const token = useSelector((state) => state.token);
 
-  const goToPrevSlide = () => {
+  const trackListingView = async () => {
+    if (!user) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:3001/users/${user._id}/track-view`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            token: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ listingId }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to track view");
+      }
+
+      // Update Redux state with new user preferences
+      dispatch(
+        updateUserPreferences({
+          lastViewedListings: data.user.lastViewedListings,
+          preferredCategories: data.user.preferredCategories,
+          preferredLocations: data.user.preferredLocations,
+          viewHistory: data.user.viewHistory,
+          pricePreferences: data.user.pricePreferences,
+        })
+      );
+    } catch (err) {
+      console.log("Failed to track listing view", err.message);
+    }
+  };
+
+  const handleListingClick = async () => {
+    await trackListingView();
+    navigate(`/properties/${listingId}`);
+  };
+
+  const goToPrevSlide = (e) => {
+    e.stopPropagation();
     setCurrentIndex(
       (prevIndex) =>
         (prevIndex - 1 + listingPhotoPaths.length) % listingPhotoPaths.length
     );
   };
 
-  const goToNextSlide = () => {
+  const goToNextSlide = (e) => {
+    e.stopPropagation();
     setCurrentIndex((prevIndex) => (prevIndex + 1) % listingPhotoPaths.length);
   };
 
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-
   /* ADD TO WISHLIST */
-  const user = useSelector((state) => state.user);
   const wishList = user?.wishList || [];
-
   const isLiked = wishList?.find((item) => item?._id === listingId);
 
-  const patchWishList = async () => {
+  const patchWishList = async (e) => {
+    e.stopPropagation();
     if (user?._id !== creator._id) {
-      const response = await fetch(
-        `http://localhost:3001/users/${user?._id}/${listingId}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      const data = await response.json();
-      if (response.ok) {
-        dispatch(setWishList(data.wishList));
-        dispatch(
-          showNotification({
-            message: data.message,
-            type: "info",
-          })
+      try {
+        const response = await fetch(
+          `http://localhost:3001/users/${user?._id}/${listingId}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              token: `Bearer ${token}`,
+            },
+          }
         );
-      } else {
+        const data = await response.json();
+        if (response.ok) {
+          dispatch(setWishList(data.wishList));
+          // Also track this interaction for recommendations
+          await trackListingView();
+          dispatch(
+            showNotification({
+              message: data.message,
+              type: "info",
+            })
+          );
+        } else {
+          dispatch(
+            showNotification({
+              message: data.error || "Failed patching wish list",
+              type: "error",
+            })
+          );
+        }
+      } catch (err) {
         dispatch(
           showNotification({
-            message: data.error || "Failed patching wish list",
+            message: err.message || "Failed to update wishlist",
             type: "error",
           })
         );
       }
-    } else {
-      return;
     }
   };
 
   return (
-    <div
-      className="listing-card"
-      onClick={() => {
-        navigate(`/properties/${listingId}`);
-      }}
-    >
+    <div className="listing-card" onClick={handleListingClick}>
       <div className="slider-container">
         <div
           className="slider"
@@ -102,22 +150,10 @@ const ListingCard = ({
                 src={`http://localhost:3001/${photo?.replace("public", "")}`}
                 alt={`photo ${index + 1}`}
               />
-              <div
-                className="prev-button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  goToPrevSlide(e);
-                }}
-              >
+              <div className="prev-button" onClick={goToPrevSlide}>
                 <ArrowBackIosNew sx={{ fontSize: "15px" }} />
               </div>
-              <div
-                className="next-button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  goToNextSlide(e);
-                }}
-              >
+              <div className="next-button" onClick={goToNextSlide}>
                 <ArrowForwardIos sx={{ fontSize: "15px" }} />
               </div>
             </div>
@@ -153,10 +189,7 @@ const ListingCard = ({
       {user && user.role === "guest" && (
         <button
           className="favorite"
-          onClick={(e) => {
-            e.stopPropagation();
-            patchWishList();
-          }}
+          onClick={patchWishList}
           disabled={!user || user.role === "host"}
         >
           {isLiked ? (

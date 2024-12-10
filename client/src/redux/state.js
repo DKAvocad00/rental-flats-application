@@ -3,6 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   user: null,
   token: null,
+  listings: [],
   notification: {
     message: "",
     type: "", // 'success' or 'error'
@@ -21,9 +22,27 @@ export const userSlice = createSlice({
     setLogout: (state) => {
       state.user = null;
       state.token = null;
+      state.listings = [];
     },
     setListings: (state, action) => {
       state.listings = action.payload.listings;
+    },
+    updateUserPreferences: (state, action) => {
+      if (state.user) {
+        state.user = {
+          ...state.user,
+          lastViewedListings:
+            action.payload.lastViewedListings || state.user.lastViewedListings,
+          preferredCategories:
+            action.payload.preferredCategories ||
+            state.user.preferredCategories,
+          preferredLocations:
+            action.payload.preferredLocations || state.user.preferredLocations,
+          viewHistory: action.payload.viewHistory || state.user.viewHistory,
+          pricePreferences:
+            action.payload.pricePreferences || state.user.pricePreferences,
+        };
+      }
     },
     setTripList: (state, action) => {
       state.user.tripList = action.payload;
@@ -54,6 +73,7 @@ export const {
   setLogin,
   setLogout,
   setListings,
+  updateUserPreferences,
   setTripList,
   setWishList,
   setPropertyList,
@@ -61,4 +81,5 @@ export const {
   showNotification,
   hideNotification,
 } = userSlice.actions;
+
 export default userSlice.reducer;

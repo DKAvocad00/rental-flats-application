@@ -9,10 +9,43 @@ import { setListings } from "../redux/state";
 const Listings = () => {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
-
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const token = useSelector((state) => state.token);
 
-  const listings = useSelector((state) => state.listings);
+  // Initialize listings state with an empty array
+  const listings = useSelector((state) => state.listings) || [];
+  const user = useSelector((state) => state.user);
+
+  const getRecommendedListings = async () => {
+    try {
+      if (!user || user.role === "host") {
+        return getFeedListings();
+      }
+
+      const response = await fetch(
+        `http://localhost:3001/properties/recommended/${user._id}${
+          selectedCategory !== "All" ? `?category=${selectedCategory}` : ""
+        }`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            token: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to fetch recommendations");
+      }
+      dispatch(setListings({ listings: data.listings }));
+      setLoading(false);
+    } catch (err) {
+      console.log("Fetching recommended listings failed", err.message);
+      getFeedListings();
+    }
+  };
 
   const getFeedListings = async () => {
     try {
@@ -33,8 +66,8 @@ const Listings = () => {
   };
 
   useEffect(() => {
-    getFeedListings();
-  }, [selectedCategory]);
+    getRecommendedListings();
+  }, [selectedCategory, user]);
 
   return (
     <>
@@ -57,31 +90,34 @@ const Listings = () => {
         <Loader />
       ) : (
         <div className="listings">
-          {listings?.map(
-            ({
-              _id,
-              creator,
-              listingPhotoPaths,
-              city,
-              province,
-              country,
-              category,
-              type,
-              price,
-            }) => (
-              <ListingCard
-                listingId={_id}
-                creator={creator}
-                listingPhotoPaths={listingPhotoPaths}
-                city={city}
-                province={province}
-                country={country}
-                category={category}
-                type={type}
-                price={price}
-              />
-            )
-          )}
+          {Array.isArray(listings) &&
+            listings.length > 0 &&
+            listings.map(
+              ({
+                _id,
+                creator,
+                listingPhotoPaths,
+                city,
+                province,
+                country,
+                category,
+                type,
+                price,
+              }) => (
+                <ListingCard
+                  key={_id}
+                  listingId={_id}
+                  creator={creator}
+                  listingPhotoPaths={listingPhotoPaths}
+                  city={city}
+                  province={province}
+                  country={country}
+                  category={category}
+                  type={type}
+                  price={price}
+                />
+              )
+            )}
         </div>
       )}
     </>

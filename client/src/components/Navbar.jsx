@@ -48,6 +48,11 @@ export const Navbar = () => {
             See Your Trips
           </a>
         )}
+        {user && user.role === "admin" && (
+          <a href="/admin" className="host">
+            Admin Dashboard
+          </a>
+        )}
         {!user && (
           <a href="/login" className="host">
             Log In
@@ -92,6 +97,11 @@ export const Navbar = () => {
                 <Link to={`/${user._id}/properties`}>Property List</Link>
                 <Link to={`/${user._id}/reservations`}>Reservation List</Link>
                 <Link to="/create-listing">List Your Property</Link>
+              </>
+            )}
+            {user.role === "admin" && (
+              <>
+                <Link to="/admin">Admin Dashboard</Link>
               </>
             )}
             <Link

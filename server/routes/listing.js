@@ -169,4 +169,113 @@ router.get("/:listingId", async (req, res) => {
   }
 });
 
+/* GET RECOMMENDED LISTINGS */
+router.get(
+  "/recommended/:userId",
+  verifyToken,
+  verifyRole(["guest"]),
+  async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { category } = req.query;
+
+      const user = await User.findById(userId)
+        .populate("lastViewedListings")
+        .populate("viewHistory.listing");
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Get all listings with optional category filter
+      let query = {};
+      if (category && category !== "All") {
+        query.category = category;
+      }
+
+      let listings = await Listing.find(query).populate("creator");
+
+      // Calculate relevance score for each listing
+      const scoredListings = listings.map((listing) => {
+        let score = 0;
+
+        // Preferred categories bonus
+        if (user.preferredCategories?.includes(listing.category)) {
+          score += 3;
+        }
+
+        // Location match bonus
+        const locationMatch = user.preferredLocations?.some(
+          (loc) =>
+            loc.city === listing.city &&
+            loc.province === listing.province &&
+            loc.country === listing.country
+        );
+        if (locationMatch) {
+          score += 2;
+        }
+
+        // Price range bonus
+        if (
+          user.pricePreferences?.min <= listing.price &&
+          user.pricePreferences?.max >= listing.price
+        ) {
+          score += 1;
+        }
+
+        // Recent views bonus - calculate based on how recent the view was
+        const view = user.viewHistory?.find(
+          (view) => view.listing?._id.toString() === listing._id.toString()
+        );
+
+        if (view) {
+          const viewDate = new Date(view.viewedAt);
+          const now = new Date();
+          const hoursSinceView = Math.floor(
+            (now - viewDate) / (1000 * 60 * 60)
+          );
+
+          // Add bonus points based on recency:
+          // - Less than 1 hour ago: 4 points
+          // - Less than 6 hours ago: 3 points
+          // - Less than 24 hours ago: 2 points
+          // - Less than 72 hours ago: 1 point
+          if (hoursSinceView < 1) {
+            score += 4;
+          } else if (hoursSinceView < 6) {
+            score += 3;
+          } else if (hoursSinceView < 24) {
+            score += 2;
+          } else if (hoursSinceView < 72) {
+            score += 1;
+          }
+        }
+
+        return {
+          ...listing.toObject(),
+          relevanceScore: score,
+        };
+      });
+
+      // Sort by relevance score (higher score first)
+      scoredListings.sort((a, b) => b.relevanceScore - a.relevanceScore);
+
+      // Remove the score before sending to client
+      const sortedListings = scoredListings.map(
+        ({ relevanceScore, ...listing }) => listing
+      );
+
+      res.status(200).json({
+        message: "Listings fetched successfully",
+        listings: sortedListings,
+      });
+    } catch (err) {
+      res.status(500).json({
+        message: "Failed to fetch recommendations",
+        error: err.message,
+      });
+    }
+  }
+);
+
 module.exports = router;

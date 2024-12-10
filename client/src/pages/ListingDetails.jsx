@@ -9,12 +9,16 @@ import { DateRange } from "react-date-range";
 import { eachDayOfInterval, addDays, parse } from "date-fns";
 import Loader from "../components/Loader";
 import { useSelector, useDispatch } from "react-redux";
-import { setWishList } from "../redux/state";
+import {
+  setWishList,
+  setTripList,
+  updateUserPreferences,
+  showNotification,
+} from "../redux/state";
 
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Favorite } from "@mui/icons-material";
-import { showNotification } from "../redux/state";
 
 const ListingDetails = () => {
   const [loading, setLoading] = useState(true);
@@ -100,6 +104,7 @@ const ListingDetails = () => {
   /* SUBMIT BOOKING */
   const customerId = useSelector((state) => state?.user?._id);
   const user = useSelector((state) => state?.user);
+  const token = useSelector((state) => state?.token);
 
   const navigate = useNavigate();
 
@@ -118,6 +123,7 @@ const ListingDetails = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          token: `Bearer ${token}`,
         },
         body: JSON.stringify(bookingForm),
       });
@@ -129,6 +135,12 @@ const ListingDetails = () => {
           showNotification({
             message: data.message,
             type: "info",
+          })
+        );
+        dispatch(setTripList(data.user.tripList));
+        dispatch(
+          updateUserPreferences({
+            preferredLocations: data.user.preferredLocations,
           })
         );
         navigate(`/${customerId}/trips`);
@@ -172,14 +184,21 @@ const ListingDetails = () => {
         `http://localhost:3001/users/${user?._id}/${listingId}`,
         {
           method: "PATCH",
-          header: {
+          headers: {
             "Content-Type": "application/json",
+            token: `Bearer ${token}`,
           },
         }
       );
       const data = await response.json();
       if (response.ok) {
         dispatch(setWishList(data.wishList));
+        dispatch(
+          updateUserPreferences({
+            preferredLocations: data.user.preferredLocations,
+            preferredCategories: data.user.preferredCategories,
+          })
+        );
         dispatch(
           showNotification({
             message: data.message,
