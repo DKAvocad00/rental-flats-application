@@ -11,6 +11,7 @@ const TripList = () => {
   const [loading, setLoading] = useState(true);
   const userId = useSelector((state) => state.user._id);
   const tripList = useSelector((state) => state.user.tripList);
+  const token = useSelector((state) => state.token);
 
   const dispatch = useDispatch();
 
@@ -20,14 +21,21 @@ const TripList = () => {
         `http://localhost:3001/users/${userId}/trips`,
         {
           method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            token: `Bearer ${token}`,
+          },
         }
       );
 
       const data = await response.json();
-      dispatch(setTripList(data));
-      setLoading(false);
+
+      if (response.ok) {
+        dispatch(setTripList(data.trips));
+        setLoading(false);
+      }
     } catch (err) {
-      console.log("Fetch Trip List failed!", err.message);
+      console.log("TripList: Caught error during fetch trips:", err.message);
     }
   };
 
@@ -44,6 +52,7 @@ const TripList = () => {
       <div className="list">
         {tripList?.map(
           ({
+            customerId,
             listingId,
             hostId,
             startDate,
@@ -54,6 +63,9 @@ const TripList = () => {
             <ListingCard
               listingId={listingId._id}
               creator={hostId._id}
+              customerFirstName={customerId.firstName}
+              customerLastName={customerId.lastName}
+              customerEmail={customerId.email}
               listingPhotoPaths={listingId.listingPhotoPaths}
               city={listingId.city}
               province={listingId.province}

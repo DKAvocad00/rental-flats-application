@@ -13,6 +13,7 @@ const PropertyList = () => {
 
   const user = useSelector((state) => state.user);
   const propertyList = user?.propertyList;
+  const token = useSelector((state) => state.token);
 
   const getPropertyList = async () => {
     try {
@@ -20,11 +21,17 @@ const PropertyList = () => {
         `http://localhost:3001/users/${user._id}/properties`,
         {
           method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            token: `Bearer ${token}`,
+          },
         }
       );
       const data = await response.json();
-      dispatch(setPropertyList(data));
-      setLoading(false);
+      if (response.ok) {
+        dispatch(setPropertyList(data.properties));
+        setLoading(false);
+      }
     } catch (err) {
       console.log("Fetching property list failed", err.message);
     }

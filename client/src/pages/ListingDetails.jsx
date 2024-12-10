@@ -207,20 +207,22 @@ const ListingDetails = () => {
       <div className="listing-details">
         <div className="title">
           <h1>{listing.title}</h1>
-          <div
-            className="save"
-            onClick={(e) => {
-              e.stopPropagation();
-              patchWishList();
-            }}
-            disabled={!user}
-          >
-            {isLiked ? (
-              <Favorite sx={{ color: "red" }} />
-            ) : (
-              <Favorite sx={{ color: "white" }} />
-            )}
-          </div>
+          {user && user.role === "guest" && (
+            <div
+              className="save"
+              onClick={(e) => {
+                e.stopPropagation();
+                patchWishList();
+              }}
+              disabled={!user || user.role === "host"}
+            >
+              {isLiked ? (
+                <Favorite sx={{ color: "red" }} />
+              ) : (
+                <Favorite sx={{ color: "white" }} />
+              )}
+            </div>
+          )}
         </div>
 
         <div className="photos">
@@ -304,13 +306,15 @@ const ListingDetails = () => {
               <p>Start Date: {dateRange[0].startDate.toLocaleDateString()}</p>
               <p>End Date: {dateRange[0].endDate.toLocaleDateString()}</p>
 
-              <button
-                className="button"
-                type="button"
-                onClick={handleBookingClick}
-              >
-                BOOKING
-              </button>
+              {user && user.role === "guest" && (
+                <button
+                  className="button"
+                  type="button"
+                  onClick={handleBookingClick}
+                >
+                  BOOKING
+                </button>
+              )}
             </div>
           </div>
         </div>

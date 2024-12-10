@@ -96,6 +96,7 @@ const CreateListing = () => {
   };
 
   const creatorId = useSelector((state) => state.user._id);
+  const token = useSelector((state) => state.token);
 
   const navigate = useNavigate();
 
@@ -132,11 +133,13 @@ const CreateListing = () => {
       photos.forEach((photo) => {
         listingForm.append("listingPhotos", photo);
       });
-
       /* Send a POST request to server */
       const response = await fetch("http://localhost:3001/properties/create", {
         method: "POST",
         body: listingForm,
+        headers: {
+          token: `Bearer ${token}`,
+        },
       });
 
       const data = await response.json();
@@ -145,14 +148,14 @@ const CreateListing = () => {
         dispatch(
           showNotification({
             message: data.message,
-            type: "success",
+            type: "info",
           })
         );
         navigate("/");
       } else {
         dispatch(
           showNotification({
-            message: data.error,
+            message: data.message,
             type: "error",
           })
         );

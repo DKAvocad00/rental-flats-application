@@ -3,6 +3,8 @@ const multer = require("multer");
 
 const Listing = require("../models/Listing");
 const User = require("../models/User");
+const path = require("path");
+const fs = require("fs");
 const { verifyToken, verifyRole } = require("../middleware/auth");
 
 /* Configuration Multer for File Upload */
@@ -31,6 +33,7 @@ router.post(
     try {
       /* Take the information from the form */
       const {
+        creator,
         category,
         type,
         streetAddress,
@@ -59,7 +62,7 @@ router.post(
       const listingPhotoPaths = listingPhotos.map((file) => file.path);
 
       const newListing = new Listing({
-        creator: req.user.id, // Use the ID from the JWT token
+        creator,
         category,
         type,
         streetAddress,
@@ -101,9 +104,7 @@ router.post(
       });
     } catch (err) {
       console.log(err);
-      res
-        .status(409)
-        .json({ message: "Failed to create listing.", error: err.message });
+      res.status(409).json({ message: err.message });
     }
   }
 );

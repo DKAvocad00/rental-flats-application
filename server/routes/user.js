@@ -3,21 +3,30 @@ const router = require("express").Router();
 const Booking = require("../models/Booking");
 const User = require("../models/User");
 const Listing = require("../models/Listing");
+const { verifyToken, verifyRole } = require("../middleware/auth");
+
 /* GET TRIP BOOKINGS */
-router.get("/:userId/trips", async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const trips = await Booking.find({ customerId: userId }).populate(
-      "customerId hostId listingId"
-    );
-    res.status(202).json(trips);
-  } catch (err) {
-    console.log(err);
-    res
-      .status(404)
-      .json({ message: "Can not find trips!", error: err.message });
+router.get(
+  "/:userId/trips",
+  verifyToken,
+  verifyRole(["guest"]),
+  async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const trips = await Booking.find({ customerId: userId }).populate(
+        "customerId hostId listingId"
+      );
+      res
+        .status(202)
+        .json({ message: "Trips fetched successfully", trips: trips });
+    } catch (err) {
+      console.log(err);
+      res
+        .status(404)
+        .json({ message: "Can not find trips!", error: err.message });
+    }
   }
-});
+);
 
 /*Add listing wish list */
 router.patch("/:userId/:listingId", async (req, res) => {
@@ -54,35 +63,51 @@ router.patch("/:userId/:listingId", async (req, res) => {
 });
 
 /*Get property list*/
-router.get("/:userId/properties", async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const properties = await Listing.find({ creator: userId }).populate(
-      "creator"
-    );
-    res.status(202).json(properties);
-  } catch (err) {
-    console.log(err);
-    res
-      .status(404)
-      .json({ message: "Can not find properties!", error: err.message });
+router.get(
+  "/:userId/properties",
+  verifyToken,
+  verifyRole(["host"]),
+  async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const properties = await Listing.find({ creator: userId }).populate(
+        "creator"
+      );
+      res.status(202).json({
+        message: "Properties fetched successfully",
+        properties: properties,
+      });
+    } catch (err) {
+      console.log(err);
+      res
+        .status(404)
+        .json({ message: "Can not find properties!", error: err.message });
+    }
   }
-});
+);
 
 /* GET Reservation list */
-router.get("/:userId/reservations", async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const reservations = await Booking.find({ hostId: userId }).populate(
-      "customerId hostId listingId"
-    );
-    res.status(202).json(reservations);
-  } catch (err) {
-    console.log(err);
-    res
-      .status(404)
-      .json({ message: "Can not find reservations!", error: err.message });
+router.get(
+  "/:userId/reservations",
+  verifyToken,
+  verifyRole(["host"]),
+  async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const reservations = await Booking.find({ hostId: userId }).populate(
+        "customerId hostId listingId"
+      );
+      res.status(202).json({
+        message: "Reservations fetched successfully",
+        reservations: reservations,
+      });
+    } catch (err) {
+      console.log(err);
+      res
+        .status(404)
+        .json({ message: "Can not find reservations!", error: err.message });
+    }
   }
-});
+);
 
 module.exports = router;

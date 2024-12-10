@@ -38,13 +38,19 @@ export const Navbar = () => {
       </div>
 
       <div className="navbar_right">
-        {user ? (
+        {user && user.role === "host" && (
           <a href="/create-listing" className="host">
-            Become A Host
+            List Your Property
           </a>
-        ) : (
+        )}
+        {user && user.role === "guest" && (
+          <a href={`/${user._id}/trips`} className="host">
+            See Your Trips
+          </a>
+        )}
+        {!user && (
           <a href="/login" className="host">
-            Become A Host
+            Log In
           </a>
         )}
 
@@ -75,11 +81,19 @@ export const Navbar = () => {
 
         {dropdownMenu && user && (
           <div className="navbar_right_accountmenu">
-            <Link to={`/${user._id}/trips`}>Trip List</Link>
-            <Link to={`/${user._id}/wishList`}>Wish List</Link>
-            <Link to={`/${user._id}/properties`}>Property List</Link>
-            <Link to={`/${user._id}/reservations`}>Reservation List</Link>
-            <Link to="/create-listing">Become A Host</Link>
+            {user.role === "guest" && (
+              <>
+                <Link to={`/${user._id}/trips`}>Trip List</Link>
+                <Link to={`/${user._id}/wishList`}>Wish List</Link>
+              </>
+            )}
+            {user.role === "host" && (
+              <>
+                <Link to={`/${user._id}/properties`}>Property List</Link>
+                <Link to={`/${user._id}/reservations`}>Reservation List</Link>
+                <Link to="/create-listing">List Your Property</Link>
+              </>
+            )}
             <Link
               to="/"
               onClick={() => {

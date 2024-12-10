@@ -13,6 +13,9 @@ import { showNotification } from "../redux/state";
 const ListingCard = ({
   listingId,
   creator,
+  customerFirstName,
+  customerLastName,
+  customerEmail,
   listingPhotoPaths,
   city,
   province,
@@ -54,7 +57,7 @@ const ListingCard = ({
         `http://localhost:3001/users/${user?._id}/${listingId}`,
         {
           method: "PATCH",
-          header: {
+          headers: {
             "Content-Type": "application/json",
           },
         }
@@ -120,45 +123,49 @@ const ListingCard = ({
             </div>
           ))}
         </div>
+        <h3>
+          {city}, {province}, {country}
+        </h3>
+        <p>{category}</p>
+
+        {!booking ? (
+          <>
+            <p>{type}</p>
+            <p>
+              <span>${price}</span> per night
+            </p>
+          </>
+        ) : (
+          <>
+            <p>
+              {customerFirstName} {customerLastName} - {customerEmail}
+            </p>
+            <p>
+              {startDate} - {endDate}
+            </p>
+            <p>
+              <span>${totalPrice}</span> total
+            </p>
+          </>
+        )}
       </div>
 
-      <h3>
-        {city}, {province}, {country}
-      </h3>
-      <p>{category}</p>
-
-      {!booking ? (
-        <>
-          <p>{type}</p>
-          <p>
-            <span>${price}</span> per night
-          </p>
-        </>
-      ) : (
-        <>
-          <p>
-            {startDate} - {endDate}
-          </p>
-          <p>
-            <span>${totalPrice}</span> total
-          </p>
-        </>
+      {user && user.role === "guest" && (
+        <button
+          className="favorite"
+          onClick={(e) => {
+            e.stopPropagation();
+            patchWishList();
+          }}
+          disabled={!user || user.role === "host"}
+        >
+          {isLiked ? (
+            <Favorite sx={{ color: "red" }} />
+          ) : (
+            <Favorite sx={{ color: "white" }} />
+          )}
+        </button>
       )}
-
-      <button
-        className="favorite"
-        onClick={(e) => {
-          e.stopPropagation();
-          patchWishList();
-        }}
-        disabled={!user}
-      >
-        {isLiked ? (
-          <Favorite sx={{ color: "red" }} />
-        ) : (
-          <Favorite sx={{ color: "white" }} />
-        )}
-      </button>
     </div>
   );
 };
