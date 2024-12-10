@@ -3,8 +3,7 @@ const multer = require("multer");
 
 const Listing = require("../models/Listing");
 const User = require("../models/User");
-const path = require("path");
-const fs = require("fs");
+const { verifyToken, verifyRole } = require("../middleware/auth");
 
 /* Configuration Multer for File Upload */
 const storage = multer.diskStorage({
@@ -22,87 +21,92 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-/* CREATE LISTING */
-router.post("/create", upload.array("listingPhotos"), async (req, res) => {
-  try {
-    /* Take the information from the form */
-    const {
-      creator,
-      category,
-      type,
-      streetAddress,
-      aptSuite,
-      city,
-      province,
-      country,
-      guestCount,
-      bedroomCount,
-      bedCount,
-      bathroomCount,
-      amenities,
-      title,
-      description,
-      highlight,
-      highlightDesc,
-      price,
-    } = req.body;
+/* CREATE LISTING - Only accessible by hosts */
+router.post(
+  "/create",
+  verifyToken,
+  verifyRole(["host"]),
+  upload.array("listingPhotos"),
+  async (req, res) => {
+    try {
+      /* Take the information from the form */
+      const {
+        category,
+        type,
+        streetAddress,
+        aptSuite,
+        city,
+        province,
+        country,
+        guestCount,
+        bedroomCount,
+        bedCount,
+        bathroomCount,
+        amenities,
+        title,
+        description,
+        highlight,
+        highlightDesc,
+        price,
+      } = req.body;
 
-    const listingPhotos = req.files;
+      const listingPhotos = req.files;
 
-    if (!listingPhotos) {
-      return res.status(400).json({ message: "No file uploaded." });
+      if (!listingPhotos) {
+        return res.status(400).json({ message: "No file uploaded." });
+      }
+
+      const listingPhotoPaths = listingPhotos.map((file) => file.path);
+
+      const newListing = new Listing({
+        creator: req.user.id, // Use the ID from the JWT token
+        category,
+        type,
+        streetAddress,
+        aptSuite,
+        city,
+        province,
+        country,
+        guestCount,
+        bedroomCount,
+        bedCount,
+        bathroomCount,
+        amenities,
+        listingPhotoPaths,
+        title,
+        description,
+        highlight,
+        highlightDesc,
+        price,
+      });
+
+      const savedListing = await newListing.save();
+
+      const listingDir = `public/uploads/listings/${savedListing._id}`;
+      fs.mkdirSync(listingDir, { recursive: true });
+
+      const updatedPhotoPaths = listingPhotos.map((file) => {
+        const oldPath = file.path;
+        const newPath = path.join(listingDir, file.filename);
+        fs.renameSync(oldPath, newPath);
+        return newPath;
+      });
+
+      savedListing.listingPhotoPaths = updatedPhotoPaths;
+      await savedListing.save();
+
+      res.status(200).json({
+        message: "Listing created successfully.",
+        listing: savedListing,
+      });
+    } catch (err) {
+      console.log(err);
+      res
+        .status(409)
+        .json({ message: "Failed to create listing.", error: err.message });
     }
-
-    const listingPhotoPaths = listingPhotos.map((file) => file.path);
-
-    const newListing = new Listing({
-      creator,
-      category,
-      type,
-      streetAddress,
-      aptSuite,
-      city,
-      province,
-      country,
-      guestCount,
-      bedroomCount,
-      bedCount,
-      bathroomCount,
-      amenities,
-      listingPhotoPaths,
-      title,
-      description,
-      highlight,
-      highlightDesc,
-      price,
-    });
-
-    const savedListing = await newListing.save();
-
-    const listingDir = `public/uploads/listings/${savedListing._id}`;
-    fs.mkdirSync(listingDir, { recursive: true });
-
-    const updatedPhotoPaths = listingPhotos.map((file) => {
-      const oldPath = file.path;
-      const newPath = path.join(listingDir, file.filename);
-      fs.renameSync(oldPath, newPath);
-      return newPath;
-    });
-
-    savedListing.listingPhotoPaths = updatedPhotoPaths;
-    await savedListing.save();
-
-    res.status(200).json({
-      message: "Listing is created successfully",
-      listing: savedListing,
-    });
-  } catch (err) {
-    res
-      .status(409)
-      .json({ message: "Fail to create Listing", error: err.message });
-    console.log(err);
   }
-});
+);
 
 /* GET lISTINGS BY CATEGORY */
 router.get("/", async (req, res) => {

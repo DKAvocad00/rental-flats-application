@@ -39,6 +39,12 @@ const UserSchema = new mongoose.Schema(
       type: Array,
       default: [],
     },
+    role: {
+      type: String,
+      enum: ["host", "guest"],
+      default: "guest",
+      required: true,
+    },
   },
   {
     timestamps: true,

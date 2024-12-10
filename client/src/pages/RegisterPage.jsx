@@ -13,6 +13,7 @@ const RegisterPage = () => {
     email: "",
     password: "",
     confirmPassword: "",
+    role: "guest",
     profileImage: null,
   });
 
@@ -64,7 +65,7 @@ const RegisterPage = () => {
         // Handle server errors
         dispatch(
           showNotification({
-            message: data.error || "Login failed. Please try again.",
+            message: data.message || "Registration failed. Please try again.",
             type: "error",
           })
         );
@@ -76,7 +77,6 @@ const RegisterPage = () => {
           type: "error",
         })
       );
-      console.log("Register failed", err.message);
     }
   };
 
@@ -127,6 +127,28 @@ const RegisterPage = () => {
               Password are not matched!
             </p>
           )}
+          <div className="role-selection">
+            <label>
+              <input
+                type="radio"
+                value="guest"
+                name="role"
+                checked={formData.role === "guest"}
+                onChange={handleChange}
+              />
+              Rent an Apartment
+            </label>
+            <label>
+              <input
+                type="radio"
+                value="host"
+                name="role"
+                checked={formData.role === "host"}
+                onChange={handleChange}
+              />
+              List an Apartment
+            </label>
+          </div>
           <input
             id="image"
             type="file"

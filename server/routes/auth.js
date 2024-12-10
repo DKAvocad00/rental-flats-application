@@ -26,8 +26,16 @@ const upload = multer({ storage });
 /*USER REGISTER*/
 router.post("/register", upload.single("profileImage"), async (req, res) => {
   try {
-    /* Take all inforamtion from the form */
-    const { firstName, lastName, email, password } = req.body;
+    /* Take all information from the form */
+    const { firstName, lastName, email, password, role } = req.body;
+
+    /* Validate role */
+    if (!["host", "guest"].includes(role)) {
+      if (req.file) {
+        fs.unlinkSync(req.file.path);
+      }
+      return res.status(400).json({ message: "Invalid role selected." });
+    }
 
     /* Check if user exists */
     const existingUser = await User.findOne({ email });
@@ -41,7 +49,7 @@ router.post("/register", upload.single("profileImage"), async (req, res) => {
     /*The uploaded file is available as req.file */
     const profileImage = req.file;
     if (!profileImage) {
-      return res.status(400).json({ message: "No file uploaded" });
+      return res.status(400).json({ message: "No profile image uploaded." });
     }
 
     /*Hass the passords*/
@@ -55,6 +63,7 @@ router.post("/register", upload.single("profileImage"), async (req, res) => {
       email,
       password: hashedPassword,
       profileImagePath: profileImage.filename,
+      role,
     });
 
     /* Save the new User */
@@ -93,21 +102,28 @@ router.post("/login", async (req, res) => {
     if (!user) {
       return res.status(409).json({ message: "User doesn't exist!" });
     }
-
     /*Compose the password with the hashed password */
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid Credentials!" });
     }
 
-    /*Generate JWN token */
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+    /* Generate JWT token */
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
     delete user.password;
 
-    res.status(200).json({ token, user });
+    res.status(200).json({
+      message: "Login successful!",
+      token: token,
+      user: user,
+    });
   } catch (err) {
     console.log(err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: err.message });
   }
 });
 

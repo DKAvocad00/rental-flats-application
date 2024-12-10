@@ -45,7 +45,7 @@ const LoginPage = () => {
         // Handle server errors
         dispatch(
           showNotification({
-            message: data.error || "Login failed. Please try again.",
+            message: data.message || "Login failed. Please try again.",
             type: "error",
           })
         );
@@ -57,7 +57,6 @@ const LoginPage = () => {
           type: "error",
         })
       );
-      console.log("Login failed", err.message);
     }
   };
 
