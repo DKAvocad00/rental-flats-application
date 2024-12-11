@@ -1,11 +1,13 @@
 const router = require("express").Router();
 const multer = require("multer");
+const mongoose = require("mongoose");
 
 const Listing = require("../models/Listing");
 const User = require("../models/User");
 const path = require("path");
 const fs = require("fs");
 const { verifyToken, verifyRole } = require("../middleware/auth");
+const Booking = require("../models/Booking");
 
 /* Configuration Multer for File Upload */
 const storage = multer.diskStorage({
@@ -274,6 +276,80 @@ router.get(
         message: "Failed to fetch recommendations",
         error: err.message,
       });
+    }
+  }
+);
+
+/* DELETE LISTING - Safe delete with related records cleanup */
+router.delete(
+  "/:listingId",
+  verifyToken,
+  verifyRole(["host", "admin"]),
+  async (req, res) => {
+    try {
+      const { listingId } = req.params;
+      const listing = await Listing.findById(listingId);
+
+      if (!listing) {
+        return res.status(404).json({ message: "Listing not found" });
+      }
+
+      // Check if user is host and owns the listing
+      if (
+        req.user.role === "host" &&
+        listing.creator.toString() !== req.user.id
+      ) {
+        return res
+          .status(403)
+          .json({ message: "You can only delete your own listings" });
+      }
+
+      // Start a session for transaction
+      const session = await mongoose.startSession();
+      session.startTransaction();
+
+      try {
+        // Delete all bookings related to this listing
+        await Booking.deleteMany({ listingId: listing._id }).session(session);
+
+        // Remove listing from all users' wishLists
+        await User.updateMany(
+          { wishList: listing._id },
+          { $pull: { wishList: listing._id } }
+        ).session(session);
+
+        // Remove listing from all users' lastViewedListings
+        await User.updateMany(
+          { lastViewedListings: listing._id },
+          { $pull: { lastViewedListings: listing._id } }
+        ).session(session);
+
+        // Remove listing from all users' viewHistory
+        await User.updateMany(
+          { "viewHistory.listing": listing._id },
+          { $pull: { viewHistory: { listing: listing._id } } }
+        ).session(session);
+
+        // Delete the listing itself
+        await Listing.findByIdAndDelete(listing._id).session(session);
+
+        // Commit the transaction
+        await session.commitTransaction();
+      } catch (error) {
+        // If any operation fails, abort the transaction
+        await session.abortTransaction();
+        throw error;
+      } finally {
+        // End the session
+        session.endSession();
+      }
+
+      res.status(200).json({
+        message: "Listing and all related records deleted successfully",
+      });
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({ error: err.message });
     }
   }
 );

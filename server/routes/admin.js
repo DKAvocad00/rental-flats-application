@@ -3,6 +3,7 @@ const User = require("../models/User");
 const Listing = require("../models/Listing");
 const Booking = require("../models/Booking");
 const { verifyToken, verifyRole } = require("../middleware/auth");
+const mongoose = require("mongoose");
 
 /* Get all users */
 router.get("/users", verifyToken, verifyRole(["admin"]), async (req, res) => {
@@ -88,12 +89,54 @@ router.delete(
   verifyRole(["admin"]),
   async (req, res) => {
     try {
-      const listing = await Listing.findByIdAndDelete(req.params.listingId);
+      const listing = await Listing.findById(req.params.listingId);
       if (!listing) {
         return res.status(404).json({ message: "Listing not found" });
       }
 
-      res.status(200).json({ message: "Listing deleted successfully" });
+      // Start a session for transaction
+      const session = await mongoose.startSession();
+      session.startTransaction();
+
+      try {
+        // Delete all bookings related to this listing
+        await Booking.deleteMany({ listingId: listing._id }).session(session);
+
+        // Remove listing from all users' wishLists
+        await User.updateMany(
+          { wishList: listing._id },
+          { $pull: { wishList: listing._id } }
+        ).session(session);
+
+        // Remove listing from all users' lastViewedListings
+        await User.updateMany(
+          { lastViewedListings: listing._id },
+          { $pull: { lastViewedListings: listing._id } }
+        ).session(session);
+
+        // Remove listing from all users' viewHistory
+        await User.updateMany(
+          { "viewHistory.listing": listing._id },
+          { $pull: { viewHistory: { listing: listing._id } } }
+        ).session(session);
+
+        // Delete the listing itself
+        await Listing.findByIdAndDelete(listing._id).session(session);
+
+        // Commit the transaction
+        await session.commitTransaction();
+      } catch (error) {
+        // If any operation fails, abort the transaction
+        await session.abortTransaction();
+        throw error;
+      } finally {
+        // End the session
+        session.endSession();
+      }
+
+      res.status(200).json({
+        message: "Listing and all related records deleted successfully",
+      });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
